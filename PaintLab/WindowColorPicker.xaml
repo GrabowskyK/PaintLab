@@ -1,0 +1,35 @@
+﻿<Window x:Class="PaintLab.WindowColorPicker"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PaintLab"
+        mc:Ignorable="d"
+        Title="WindowColorPicker" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*"></ColumnDefinition>
+            <ColumnDefinition Width="20*"></ColumnDefinition>
+            <ColumnDefinition Width="20*"></ColumnDefinition>
+            <ColumnDefinition Width="5*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <Label Content="Wybierz kolor" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="32"></Label>
+        <Label Content="RGB:" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"></Label>
+        <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBox x:Name="Red" Width="50px" Height="30px" Margin="5px" TextAlignment="Center" FontSize="18" TextChanged="Red_TextChanged"></TextBox>
+            <TextBox x:Name="Green" Width="50px" Height="30px" Margin="5px" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18" TextChanged="Green_TextChanged"></TextBox>
+            <TextBox x:Name="Blue" Width="50px" Height="30px" Margin="5px" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18" TextChanged="Blue_TextChanged"></TextBox>
+        </StackPanel>
+        <Rectangle x:Name="ColorRectangle" Width="30" Height="30"  Grid.Row="2" Grid.Column="2" Margin="2" Fill="Gray"></Rectangle>
+        <Button Content="Wybierz" Grid.Column="1" Grid.Row="3" Grid.ColumnSpan="2" Margin="30" Click="Button_Click"></Button>
+        <Label Content="HSV:" Grid.Row="4" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"></Label>
+        <Label x:Name="HSVtext" Content="" Grid.Row="4" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Grid.ColumnSpan="2"></Label>
+    </Grid>
+</Window>

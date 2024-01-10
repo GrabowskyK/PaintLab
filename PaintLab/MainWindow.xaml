@@ -1,0 +1,40 @@
+﻿<Window x:Class="PaintLab.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PaintLab"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="800" Width="1200">
+    <Grid>
+        <Canvas x:Name="Obszar_roboczy" MouseDown="Obszar_roboczy_MouseDown" MouseMove="Obszar_roboczy_MouseMove" MouseLeftButtonDown="Obszar_roboczy_MouseLeftButtonDown" MouseUp="Obszar_roboczy_MouseUp">
+            <Canvas.Background>
+                <SolidColorBrush Color="Black"></SolidColorBrush></Canvas.Background>
+        </Canvas>
+        <ToolBarPanel Margin="0,-1,0,0">
+            <ToolBar VerticalAlignment="Stretch">
+                <Button x:Name="DrawButton" Content="rysujDowolnie" Click="DrawButton_Click"></Button>
+                <Button x:Name="RysujPoint" Content="rysujPoint" Click="DrawPoint_Click"></Button>
+                <Button x:Name="InfoButton" Margin="10" Content="Autor" Click="InfoButton_Click"></Button>
+                <Menu>
+                    <MenuItem Header="Odcinki">
+                        <MenuItem x:Name="DrawSegment" Click="DrawSegment_Click" Header="Rysuj"/>
+                        <MenuItem x:Name="EditSegment" Click="EditSegment_Click" Header="Edytuj"/>
+                    </MenuItem>
+                </Menu>
+                <Menu>
+                    <MenuItem Header="Figury">
+                        <MenuItem x:Name="Prostokat" Header="Prostokat" Click="Prostokat_Click"/>
+                        <MenuItem x:Name="Elipse" Header="Elipsa" Click="Elipse_Click"/>
+                        <MenuItem x:Name="DrawPolygon" Header="Wielokoat" Click="DrawPolygon_Click" />
+                        <MenuItem x:Name="DrawLineLamana" Header="Lamana" Click="DrawLineLamana_Click"/> 
+                        <MenuItem x:Name="DrawRomb" Header="Romb" Click="DrawRomb_Click"/> 
+                        <MenuItem x:Name="DrawPlus" Header="Plus" Click="DrawPlus_Click"/> 
+                    </MenuItem>
+                </Menu>
+                <Rectangle x:Name="ColorPicker" Width="20" Height="20" Margin="2" Fill="Gray" PreviewMouseLeftButtonDown="ColorPicker_PreviewMouseLeftButtonDown"></Rectangle>
+            </ToolBar>
+        </ToolBarPanel>
+        
+    </Grid>
+</Window>
