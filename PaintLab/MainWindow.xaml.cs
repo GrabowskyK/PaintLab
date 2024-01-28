@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -14,6 +15,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Emgu.CV;
+using static System.Net.Mime.MediaTypeNames;
+using Emgu.CV.Structure;
+using System.IO;
+using Emgu.CV.Reg;
+using System.Windows.Media.Media3D;
 
 namespace PaintLab
 {
@@ -26,16 +33,21 @@ namespace PaintLab
         public MainWindow()
         {
             InitializeComponent();
+            
         }
-        private Ellipse ellipseMain;
+        private System.Windows.Shapes.Ellipse ellipseMain;
         private Rectangle rectangleMain;
         private Line lineMain; //Do rysowania krzywej
+        private List<BitmapImage> sourceBitmap = new List<BitmapImage>(); //Do uploadowania zdjec
+        private int selectedImage = 0;
         int drawStyle = 0;
+        private Rectangle eraserRectangle = null;
         Color selectColor = Color.FromRgb(100, 100, 100);
+
         private List<Double> points = new List<Double>();
-        private Ellipse DrawPoint(double x, double y, Color color, double size)
+        private System.Windows.Shapes.Ellipse DrawPoint(double x, double y, Color color, double size)
         {
-            Ellipse ellipse = new Ellipse();
+            System.Windows.Shapes.Ellipse ellipse = new System.Windows.Shapes.Ellipse();
             ellipse.Width = size;
             ellipse.Height = size;
 
@@ -48,9 +60,9 @@ namespace PaintLab
             Obszar_roboczy.Children.Add(ellipse);
             return ellipse;
         }
-        private Ellipse DrawElipse(double sizeX, double sizeY, double x, double y, Color color)
+        private System.Windows.Shapes.Ellipse DrawElipse(double sizeX, double sizeY, double x, double y, Color color)
         {
-            Ellipse ellipse = new Ellipse();
+            System.Windows.Shapes.Ellipse ellipse = new System.Windows.Shapes.Ellipse();
             ellipse.Width = sizeX;
             ellipse.Height = sizeY;
 
@@ -239,6 +251,16 @@ namespace PaintLab
             }
         }
 
+        private void CreateImage(double mouseX, double mouseY)
+        {
+            System.Windows.Controls.Image pngImage = new System.Windows.Controls.Image();
+            pngImage.Source = sourceBitmap[selectedImage];
+            pngImage.Width = 100;
+            pngImage.Height = 100;
+            Canvas.SetLeft(pngImage, mouseX);
+            Canvas.SetTop(pngImage, mouseY);
+            Obszar_roboczy.Children.Add(pngImage);
+        }
         private void Obszar_roboczy_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if(e.ButtonState == MouseButtonState.Pressed)
@@ -250,7 +272,90 @@ namespace PaintLab
 
         private void Obszar_roboczy_MouseMove(object sender, MouseEventArgs e)
         {
-            if(e.LeftButton == MouseButtonState.Pressed && drawStyle == 1)
+            if (drawStyle == 12 && e.LeftButton == MouseButtonState.Pressed)
+            {
+                if (e.Source is Rectangle eraserRectangle)
+                {
+                    double mouseX = e.GetPosition(this).X;
+                    double mouseY = e.GetPosition(this).Y;
+                    Canvas.SetLeft(eraserRectangle, mouseX - eraserRectangle.Width / 2);
+                    Canvas.SetTop(eraserRectangle, mouseY - eraserRectangle.Height / 2);
+                    Rect rect = new Rect(Canvas.GetLeft(eraserRectangle), Canvas.GetTop(eraserRectangle), eraserRectangle.Width, eraserRectangle.Height);
+                    try
+                    {
+                        foreach (UIElement element in Obszar_roboczy.Children)
+                        {
+                            {
+                                if (element is Line)
+                                {
+                                    var result = element as Line;
+                                    if (element != eraserRectangle && (rect.IntersectsWith(new Rect(result.X1, result.Y1, 1, 1)) || rect.IntersectsWith(new Rect(result.X2, result.Y2, 1, 1)))) //: && IsPointInsideElement(new Point(mouseX, mouseY), element))
+                                    {
+                                        Obszar_roboczy.Children.Remove(element);
+                                        break; // Usunięto pierwszy napotkany element, można przerwać pętlę
+                                    }
+                                }
+                                else if (element is Polygon)
+                                {
+                                    var result = element as Polygon;
+                                    if (element != eraserRectangle)
+                                    {
+                                        foreach (var pkt in result.Points)
+                                        {
+                                            if (rect.IntersectsWith(new Rect(pkt.X, pkt.Y, 1, 1)))
+                                            {
+                                                Obszar_roboczy.Children.Remove(element);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                else if (element is System.Windows.Shapes.Ellipse)
+                                {
+                                    var rectElement = element.PointToScreen(new Point(0, 0));
+                                    double width = element.RenderSize.Width;
+                                    double height = element.RenderSize.Height;
+                                    if (element != eraserRectangle && rect.IntersectsWith(new Rect(Canvas.GetLeft(element), Canvas.GetTop(element), width, height))) //: && IsPointInsideElement(new Point(mouseX, mouseY), element))
+                                    {
+                                        Obszar_roboczy.Children.Remove(element);
+                                        break; // Usunięto pierwszy napotkany element, można przerwać pętlę
+                                    }
+                                }
+                                else
+                                {
+                                    double left = Canvas.GetLeft(element);
+                                    double top = Canvas.GetTop(element);
+
+                                    Vector vector = new Vector(left, top);
+                                    if (element != eraserRectangle && rect.IntersectsWith(new Rect(left, top, element.RenderSize.Width, element.RenderSize.Height))) //: && IsPointInsideElement(new Point(mouseX, mouseY), element))
+                                    {
+                                        Obszar_roboczy.Children.Remove(element);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                    } 
+                }
+            }
+            else if (drawStyle == 12)
+            {
+                double mouseX = e.GetPosition(this).X;
+                double mouseY = e.GetPosition(this).Y;
+                Canvas.SetLeft(eraserRectangle, mouseX - eraserRectangle.Width / 2);
+                Canvas.SetTop(eraserRectangle, mouseY - eraserRectangle.Height / 2);
+            }
+            else
+            {
+                Obszar_roboczy.Children.Remove(eraserRectangle);
+
+            }
+
+            if (e.LeftButton == MouseButtonState.Pressed && drawStyle == 1)
             {
                 Line line = new Line();
                 line.Stroke = new SolidColorBrush(selectColor);
@@ -283,6 +388,8 @@ namespace PaintLab
                 Canvas.SetTop(ellipseMain, e.GetPosition(this).Y - ellipseMain.Height / 2);
                 Obszar_roboczy.Children.Add(ellipseMain);
             }
+            
+                
         }
 
 
@@ -301,7 +408,7 @@ namespace PaintLab
             return Math.Sqrt(dx * dx + dy * dy);
         }
 
-        PointCollection linePoints = new PointCollection();
+        System.Windows.Media.PointCollection linePoints = new System.Windows.Media.PointCollection();
         double editLineX;
         double editLineY;
         bool durginEdit = false;
@@ -311,7 +418,7 @@ namespace PaintLab
             double mouseY = e.GetPosition(this).Y;
             if (drawStyle == 2)
             {
-                Ellipse ellipse = DrawPoint(e.GetPosition(this).X, e.GetPosition(this).Y, Colors.Violet, 6);
+                System.Windows.Shapes.Ellipse ellipse = DrawPoint(e.GetPosition(this).X, e.GetPosition(this).Y, Colors.Violet, 6);
             }
             if (drawStyle == 3)
             {
@@ -355,7 +462,7 @@ namespace PaintLab
                 Point point4 = new Point(mouseX + polySize, mouseY - 2 * polySize);
                 Point point5 = new Point(mouseX - polySize, mouseY - 2 * polySize);
                 Point point6 = new Point(mouseX - 2 * polySize, mouseY);
-                PointCollection polyPoints = new PointCollection();
+                System.Windows.Media.PointCollection polyPoints = new System.Windows.Media.PointCollection();
                 polyPoints.Add(point1);
                 polyPoints.Add(point2);
                 polyPoints.Add(point3);
@@ -376,7 +483,7 @@ namespace PaintLab
             }
             if (drawStyle == 7)
             {
-                Ellipse elips = DrawElipse(0, 0, mouseX, mouseY, Colors.Violet);
+                System.Windows.Shapes.Ellipse elips = DrawElipse(0, 0, mouseX, mouseY, Colors.Violet);
 
             }
             if(drawStyle == 8)
@@ -402,7 +509,21 @@ namespace PaintLab
             {
                 CreatePlus(mouseX, mouseY, 25, Colors.BlueViolet);
             }
+            if(drawStyle == 11)
+            {
+                CreateImage(mouseX, mouseY);
+            }
         }
+        private bool IsPointInsideElement(Point point, UIElement element)
+        {
+            if (element.RenderSize.IsEmpty)
+                return false;
+
+            GeneralTransform transform = element.TransformToAncestor(Obszar_roboczy);
+            Rect bounds = transform.TransformBounds(new Rect(element.RenderSize));
+            return bounds.Contains(point);
+        }
+
 
         private void DrawButton_Click(object sender, RoutedEventArgs e) //Rysowanie dowolne
         {
@@ -460,8 +581,12 @@ namespace PaintLab
             drawStyle = 10;
         }
 
-        private void Obszar_roboczy_MouseUp(object sender, MouseButtonEventArgs e)
+        //Wstawianie obrazu 
+        private void ImageButton_Click(object sender, RoutedEventArgs e)
         {
+            drawStyle = 11;
+            var result = e.Source as MenuItem;
+            selectedImage = Int32.Parse(result.DataContext.ToString()) - 3; //-3, bo miały być już 2 załadowane obrazy
         }
 
         private void ColorPicker_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -474,6 +599,172 @@ namespace PaintLab
                 selectColor = window.color.Color;
                 ColorPicker.Fill = window.color;
             }
+        }
+
+        private void Upload_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openDialog = new OpenFileDialog();
+            openDialog.FilterIndex = 1;
+            if (openDialog.ShowDialog() == true)
+            {
+                BitmapImage bitmap = new BitmapImage(new Uri(openDialog.FileName));
+                MenuItem newMenuItem = new MenuItem();
+                newMenuItem.Header = openDialog.SafeFileName;
+                
+                newMenuItem.Click += ImageButton_Click;
+                var sizeArray = sourceBitmap.Count + 3;
+                newMenuItem.DataContext = sizeArray.ToString();
+                AllImages.Items.Add(newMenuItem);
+
+                sourceBitmap.Add(bitmap);
+            }
+            
+        }
+
+        private BitmapSource ConvertCanvasToBitmap(Canvas canvas)
+        {
+            // Utwórz obiekt RenderTargetBitmap o rozmiarach Canvas
+            RenderTargetBitmap renderBitmap = new RenderTargetBitmap(
+                (int)canvas.ActualWidth, (int)canvas.ActualHeight, 96, 96, PixelFormats.Pbgra32);
+
+            // Renderuj zawartość Canvas na RenderTargetBitmap
+            canvas.Measure(new Size(canvas.ActualWidth, canvas.ActualHeight));
+            canvas.Arrange(new Rect(new Size(canvas.ActualWidth, canvas.ActualHeight)));
+            renderBitmap.Render(canvas);
+
+            // Konwertuj RenderTargetBitmap na BitmapSource
+            PngBitmapEncoder encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                encoder.Save(ms);
+                ms.Position = 0;
+
+                BitmapImage bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.StreamSource = ms;
+                bitmap.EndInit();
+
+                return bitmap;
+            }
+        }
+
+        private void sobel_Click(object sender, RoutedEventArgs e)
+        {
+            BitmapImage canvasImage = new BitmapImage();
+
+            // Save current canvas transform
+            // BitmapSource canvasBitmap = ConvertCanvasToBitmap(Obszar_roboczy);
+            // System.Windows.Controls.Image image = new System.Windows.Controls.Image();
+            // image.Source = canvasBitmap;
+            // // Ustaw pozycję obrazu na Canvas
+            // Canvas.SetLeft(image, 220);
+            // Canvas.SetTop(image, 220);
+
+            // // Usuń istniejące elementy z Canvas
+            //// Obszar_roboczy.Children.Clear();
+            // // Dodaj obraz do Canvas
+            // Obszar_roboczy.Children.Add(image);
+            // //YourImageControl.Source = canvasBitmap; // Wyświetlenie obrazu na kontrolce Image
+
+            //Image<Gray, float> image = new Image<Gray, float>((int)Obszar_roboczy.Width, (int)Obszar_roboczy.Height, new Gray(0));
+            //Image<Gray, Single> img = imgProcessed1.Convert<Gray, Single>();
+        }
+
+
+        private void SaveAsJpg_Click(object sender, RoutedEventArgs e)
+        {
+            Uri path = null;
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Image File (*.jpg|*.jpg";
+            saveFileDialog.FilterIndex = 1;
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                path = new Uri(saveFileDialog.FileName);
+            }
+
+             if (path == null) return;
+
+            Transform transform = Obszar_roboczy.LayoutTransform;
+            Obszar_roboczy.LayoutTransform = null;
+
+            Size size = new Size(Obszar_roboczy.ActualWidth, Obszar_roboczy.ActualHeight);
+
+            Obszar_roboczy.Measure(size);
+            Obszar_roboczy.Arrange(new Rect(size));
+
+            RenderTargetBitmap renderTargetBitmap = new RenderTargetBitmap(
+                (int)size.Width,
+                (int)size.Height,
+                96d,
+                96d,
+                PixelFormats.Pbgra32
+                );
+            renderTargetBitmap.Render(Obszar_roboczy);
+
+            using (FileStream outStream = new FileStream(path.LocalPath, FileMode.Create))
+            {
+                PngBitmapEncoder encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(renderTargetBitmap));
+                encoder.Save(outStream);
+            }
+            Obszar_roboczy.LayoutTransform = transform;
+        }
+
+        private void SaveAsPng_Click(object sender, RoutedEventArgs e)
+        {
+            Uri path = null;
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Image File (*.png|*.png";
+            saveFileDialog.FilterIndex = 1;
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                path = new Uri(saveFileDialog.FileName);
+            }
+
+            if (path == null) return;
+
+            Transform transform = Obszar_roboczy.LayoutTransform;
+            Obszar_roboczy.LayoutTransform = null;
+
+            Size size = new Size(Obszar_roboczy.ActualWidth, Obszar_roboczy.ActualHeight);
+
+            Obszar_roboczy.Measure(size);
+            Obszar_roboczy.Arrange(new Rect(size));
+
+            RenderTargetBitmap renderTargetBitmap = new RenderTargetBitmap(
+                (int)size.Width,
+                (int)size.Height,
+                96d,
+                96d,
+                PixelFormats.Pbgra32
+                );
+            renderTargetBitmap.Render(Obszar_roboczy);
+
+            using (FileStream outStream = new FileStream(path.LocalPath, FileMode.Create))
+            {
+                PngBitmapEncoder encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(renderTargetBitmap));
+                encoder.Save(outStream);
+            }
+            Obszar_roboczy.LayoutTransform = transform;
+        }
+
+        
+        private void Eraser_Click(object sender, RoutedEventArgs e)
+        {
+            drawStyle = 12;
+            Rectangle tempEraser = new Rectangle();
+            tempEraser.Width = 100;
+            tempEraser.Height = 100;
+            Brush brushColor = new SolidColorBrush(Colors.White);
+            tempEraser.Stroke = brushColor;
+            tempEraser.Fill = brushColor;
+            eraserRectangle = tempEraser;
+            Obszar_roboczy.Children.Add(eraserRectangle);
+
         }
 
     }

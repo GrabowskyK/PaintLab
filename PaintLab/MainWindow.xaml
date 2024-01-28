@@ -7,15 +7,17 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="800" Width="1200">
     <Grid>
-        <Canvas x:Name="Obszar_roboczy" MouseDown="Obszar_roboczy_MouseDown" MouseMove="Obszar_roboczy_MouseMove" MouseLeftButtonDown="Obszar_roboczy_MouseLeftButtonDown" MouseUp="Obszar_roboczy_MouseUp">
+        <Canvas x:Name="Obszar_roboczy" MouseDown="Obszar_roboczy_MouseDown" MouseMove="Obszar_roboczy_MouseMove" MouseLeftButtonDown="Obszar_roboczy_MouseLeftButtonDown">
             <Canvas.Background>
-                <SolidColorBrush Color="Black"></SolidColorBrush></Canvas.Background>
+                <SolidColorBrush Color="Black"></SolidColorBrush>
+            </Canvas.Background>
         </Canvas>
         <ToolBarPanel Margin="0,-1,0,0">
             <ToolBar VerticalAlignment="Stretch">
                 <Button x:Name="DrawButton" Content="rysujDowolnie" Click="DrawButton_Click"></Button>
                 <Button x:Name="RysujPoint" Content="rysujPoint" Click="DrawPoint_Click"></Button>
                 <Button x:Name="InfoButton" Margin="10" Content="Autor" Click="InfoButton_Click"></Button>
+                <Button x:Name="Eraser" Margin="10" Content="Gumka" Click="Eraser_Click"></Button>
                 <Menu>
                     <MenuItem Header="Odcinki">
                         <MenuItem x:Name="DrawSegment" Click="DrawSegment_Click" Header="Rysuj"/>
@@ -27,9 +29,26 @@
                         <MenuItem x:Name="Prostokat" Header="Prostokat" Click="Prostokat_Click"/>
                         <MenuItem x:Name="Elipse" Header="Elipsa" Click="Elipse_Click"/>
                         <MenuItem x:Name="DrawPolygon" Header="Wielokoat" Click="DrawPolygon_Click" />
-                        <MenuItem x:Name="DrawLineLamana" Header="Lamana" Click="DrawLineLamana_Click"/> 
-                        <MenuItem x:Name="DrawRomb" Header="Romb" Click="DrawRomb_Click"/> 
-                        <MenuItem x:Name="DrawPlus" Header="Plus" Click="DrawPlus_Click"/> 
+                        <MenuItem x:Name="DrawLineLamana" Header="Lamana" Click="DrawLineLamana_Click"/>
+                        <MenuItem x:Name="DrawRomb" Header="Romb" Click="DrawRomb_Click"/>
+                        <MenuItem x:Name="DrawPlus" Header="Plus" Click="DrawPlus_Click"/>
+                    </MenuItem>
+                </Menu>
+                <Menu>
+                    <MenuItem x:Name="AllImages" Header="Images">
+                        <MenuItem x:Name="Upload" Header="Upload" Click="Upload_Click"></MenuItem>
+                    </MenuItem>
+                </Menu>
+                <Menu>
+                    <MenuItem x:Name="Export" Header="Save as...">
+                        <MenuItem x:Name="SaveAsJpg" Header="Jpg" Click="SaveAsJpg_Click"></MenuItem>
+                        <MenuItem x:Name="SaveAsPng" Header="Png" Click="SaveAsPng_Click"></MenuItem>
+                    </MenuItem>
+                </Menu>
+                <Menu>
+                    <MenuItem x:Name="filtres"  Header="Filtres">
+                        <MenuItem x:Name="sobel" Header="Sobel" Click="sobel_Click"></MenuItem>
+                        <MenuItem x:Name="gauss" Header="Gauss"></MenuItem>
                     </MenuItem>
                 </Menu>
                 <Rectangle x:Name="ColorPicker" Width="20" Height="20" Margin="2" Fill="Gray" PreviewMouseLeftButtonDown="ColorPicker_PreviewMouseLeftButtonDown"></Rectangle>
