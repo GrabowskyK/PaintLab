@@ -48,7 +48,8 @@
                 <Menu>
                     <MenuItem x:Name="filtres"  Header="Filtres">
                         <MenuItem x:Name="sobel" Header="Sobel" Click="sobel_Click"></MenuItem>
-                        <MenuItem x:Name="gauss" Header="Gauss"></MenuItem>
+                        <MenuItem x:Name="gauss" Header="Gauss" Click="gauss_Click"></MenuItem>
+                        <MenuItem x:Name="sepia" Header="Sepia" Click="sepia_Click"></MenuItem>
                     </MenuItem>
                 </Menu>
                 <Rectangle x:Name="ColorPicker" Width="20" Height="20" Margin="2" Fill="Gray" PreviewMouseLeftButtonDown="ColorPicker_PreviewMouseLeftButtonDown"></Rectangle>

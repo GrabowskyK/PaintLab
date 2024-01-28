@@ -35,6 +35,7 @@ namespace PaintLab
             InitializeComponent();
             
         }
+        private Filtry filtry = new Filtry();
         private System.Windows.Shapes.Ellipse ellipseMain;
         private Rectangle rectangleMain;
         private Line lineMain; //Do rysowania krzywej
@@ -514,15 +515,6 @@ namespace PaintLab
                 CreateImage(mouseX, mouseY);
             }
         }
-        private bool IsPointInsideElement(Point point, UIElement element)
-        {
-            if (element.RenderSize.IsEmpty)
-                return false;
-
-            GeneralTransform transform = element.TransformToAncestor(Obszar_roboczy);
-            Rect bounds = transform.TransformBounds(new Rect(element.RenderSize));
-            return bounds.Contains(point);
-        }
 
 
         private void DrawButton_Click(object sender, RoutedEventArgs e) //Rysowanie dowolne
@@ -650,30 +642,84 @@ namespace PaintLab
                 return bitmap;
             }
         }
-
-        private void sobel_Click(object sender, RoutedEventArgs e)
+        private BitmapSource ConvertCanvasToBitmapSource()
         {
             BitmapImage canvasImage = new BitmapImage();
 
             // Save current canvas transform
-            // BitmapSource canvasBitmap = ConvertCanvasToBitmap(Obszar_roboczy);
-            // System.Windows.Controls.Image image = new System.Windows.Controls.Image();
-            // image.Source = canvasBitmap;
-            // // Ustaw pozycję obrazu na Canvas
-            // Canvas.SetLeft(image, 220);
-            // Canvas.SetTop(image, 220);
+            Transform transform = Obszar_roboczy.LayoutTransform;
+            // reset current transform (in case it is scaled or rotated)
+            //Obszar_roboczy.LayoutTransform = null;
 
-            // // Usuń istniejące elementy z Canvas
-            //// Obszar_roboczy.Children.Clear();
-            // // Dodaj obraz do Canvas
-            // Obszar_roboczy.Children.Add(image);
-            // //YourImageControl.Source = canvasBitmap; // Wyświetlenie obrazu na kontrolce Image
+            // Get the size of canvas
+            Size size = new Size(Obszar_roboczy.Width, Obszar_roboczy.Height);
+            // Measure and arrange the surface
+            // VERY IMPORTANT
+            Obszar_roboczy.Measure(Obszar_roboczy.RenderSize);
+            Obszar_roboczy.Arrange(new Rect(Obszar_roboczy.RenderSize));
 
-            //Image<Gray, float> image = new Image<Gray, float>((int)Obszar_roboczy.Width, (int)Obszar_roboczy.Height, new Gray(0));
-            //Image<Gray, Single> img = imgProcessed1.Convert<Gray, Single>();
+            // Create a render bitmap and push the surface to it
+            RenderTargetBitmap renderBitmap =
+              new RenderTargetBitmap(
+                (int)Obszar_roboczy.RenderSize.Width,
+                (int)Obszar_roboczy.RenderSize.Height,
+                96d,
+                96d,
+                PixelFormats.Pbgra32);
+            renderBitmap.Render(Obszar_roboczy);
+            return renderBitmap;
+        }
+        private void sobel_Click(object sender, RoutedEventArgs e)
+        {
+            BitmapSource renderBitmap = ConvertCanvasToBitmapSource();
+            System.Windows.Controls.Image image = new System.Windows.Controls.Image();
+            Canvas.SetLeft(image, 0);
+            Canvas.SetTop(image, 0);
+            double[,] sobelX = {
+            { -1, 0, 1 },
+            { -2, 0, 2 },
+            { -1, 0, 1 }
+        };
+
+                double[,] sobelY = {
+            { -1, -2, -1 },
+            { 0, 0, 0 },
+            { 1, 2, 1 }
+        };
+
+                BitmapSource filteredImage = filtry.ApplySobelFilter(renderBitmap, sobelX, sobelY);
+                image.Source = filteredImage;
+            Obszar_roboczy.Children.Add(image);
         }
 
+        private void gauss_Click(object sender, RoutedEventArgs e)
+        {
+            BitmapSource renderBitmap = ConvertCanvasToBitmapSource();
+            System.Windows.Controls.Image image = new System.Windows.Controls.Image();
+            Canvas.SetLeft(image, 0);
+            Canvas.SetTop(image, 0);
+            // Przykładowy filtr Gaussa
+            double[,] filterMatrix = {
+            { 1, 2, 1 },
+            { 2, 4, 2 },
+            { 1, 2, 1 }
+        };
+            
 
+            BitmapSource filteredImage = filtry.ApplyFilterGauss(renderBitmap, filterMatrix);
+            image.Source = filteredImage;
+            Obszar_roboczy.Children.Add(image);
+        }
+        private void sepia_Click(object sender, RoutedEventArgs e)
+        {
+            BitmapSource renderBitmap = ConvertCanvasToBitmapSource();
+            System.Windows.Controls.Image image = new System.Windows.Controls.Image();
+            Canvas.SetLeft(image, 0);
+            Canvas.SetTop(image, 0);
+            BitmapSource filteredImage = filtry.ApplySepiaFilter(renderBitmap);
+            image.Source = filteredImage;
+            Obszar_roboczy.Children.Add(image);
+        }
         private void SaveAsJpg_Click(object sender, RoutedEventArgs e)
         {
             Uri path = null;
@@ -767,5 +813,6 @@ namespace PaintLab
 
         }
 
+        
     }
 }
