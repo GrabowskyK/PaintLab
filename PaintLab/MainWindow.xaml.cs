@@ -21,6 +21,8 @@ using Emgu.CV.Structure;
 using System.IO;
 using Emgu.CV.Reg;
 using System.Windows.Media.Media3D;
+using Emgu.CV.CvEnum;
+using System.Windows.Media.Effects;
 
 namespace PaintLab
 {
@@ -256,8 +258,8 @@ namespace PaintLab
         {
             System.Windows.Controls.Image pngImage = new System.Windows.Controls.Image();
             pngImage.Source = sourceBitmap[selectedImage];
-            pngImage.Width = 100;
-            pngImage.Height = 100;
+            //pngImage.Width = 100;
+            //pngImage.Height = 100;
             Canvas.SetLeft(pngImage, mouseX);
             Canvas.SetTop(pngImage, mouseY);
             Obszar_roboczy.Children.Add(pngImage);
@@ -513,6 +515,31 @@ namespace PaintLab
             if(drawStyle == 11)
             {
                 CreateImage(mouseX, mouseY);
+            }
+            if(drawStyle == 16)
+            {
+                // Pobierz pozycję kliknięcia myszą w Canvas
+                Point mousePosition = e.GetPosition(this);
+
+                // Określ rozmiar obszaru do rozmazania
+                int areaSize = 30; // Możesz dostosować rozmiar obszaru do rozmazania
+
+                // Określ granice obszaru do rozmazania
+                double startX = mousePosition.X - areaSize / 2;
+                double startY = mousePosition.Y - areaSize / 2;
+
+                // Stwórz efekt rozmazywania
+                BlurEffect blurEffect = new BlurEffect()
+                {
+                    Radius = 15 // Możesz dostosować promień rozmazywania
+                };
+
+                // Ustaw efekt rozmazywania na istniejącym canvasie
+                Obszar_roboczy.Effect = blurEffect;
+
+                // Ustaw lokalizację efektu rozmazywania
+                Canvas.SetLeft(Obszar_roboczy, startX);
+                Canvas.SetTop(Obszar_roboczy, startY);
             }
         }
 
@@ -813,6 +840,14 @@ namespace PaintLab
 
         }
 
-        
+        private void GaussBlur_Click(object sender, RoutedEventArgs e)
+        {
+            drawStyle = 16;
+        }
+
+        private void DeleteBlur_Click(object sender, RoutedEventArgs e)
+        {
+            Obszar_roboczy.Effect = null;
+        }
     }
 }

@@ -18,6 +18,8 @@
                 <Button x:Name="RysujPoint" Content="rysujPoint" Click="DrawPoint_Click"></Button>
                 <Button x:Name="InfoButton" Margin="10" Content="Autor" Click="InfoButton_Click"></Button>
                 <Button x:Name="Eraser" Margin="10" Content="Gumka" Click="Eraser_Click"></Button>
+                <Button x:Name="GaussBlur" Margin="10" Content="Gauss" Click="GaussBlur_Click"></Button>
+                <Button x:Name="DeleteBlur" Margin="10" Content="Delete Blur" Click="DeleteBlur_Click"></Button>
                 <Menu>
                     <MenuItem Header="Odcinki">
                         <MenuItem x:Name="DrawSegment" Click="DrawSegment_Click" Header="Rysuj"/>
